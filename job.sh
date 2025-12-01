@@ -16,6 +16,8 @@ srun bash -c 'echo "Job is running on $(hostname), started at $(date)"'
 DEBUG=${DEBUG:-0}
 # Set the "use sequential" condition to 0 if we didn't pass any env vars
 SEQ=${SEQ:-0}
+# Set the variant (mpi, openmp, simd)
+VARIANT=${VARIANT:-mpi}
 
 # Compile the code at the appropriate debug level
 echo "Running make to compile your code..."
@@ -26,22 +28,41 @@ if [ "$SEQ" -eq 1 ]; then
     # Use the sequential executable
     EXECUTABLE="distr-sched-seq"
 else
-    # Choose the right executable based on the DEBUG level
-    case "$DEBUG" in
-        0)
-            EXECUTABLE="distr-sched"
-            ;;
-        1)
-            EXECUTABLE="distr-sched-debug1"
-            ;;
-        2)
-            EXECUTABLE="distr-sched-debug2"
-            ;;
-        *)
-            echo "Invalid value for DEBUG: $DEBUG"
-            exit 1
-            ;;
-    esac
+    # Choose the right executable based on the DEBUG level and VARIANT
+    if [ "$DEBUG" -eq 0 ]; then
+        case "$VARIANT" in
+            mpi)
+                EXECUTABLE="distr-sched"
+                echo "Running MPI-only version"
+                ;;
+            openmp)
+                EXECUTABLE="distr-sched-openmp"
+                echo "Running MPI+OpenMP version"
+                ;;
+            simd)
+                EXECUTABLE="distr-sched-simd"
+                echo "Running MPI+OpenMP+SIMD version"
+                ;;
+            *)
+                echo "Invalid VARIANT: $VARIANT (must be mpi, openmp, or simd)"
+                exit 1
+                ;;
+        esac
+    else
+        # Debug versions always use MPI-only
+        case "$DEBUG" in
+            1)
+                EXECUTABLE="distr-sched-debug1"
+                ;;
+            2)
+                EXECUTABLE="distr-sched-debug2"
+                ;;
+            *)
+                echo "Invalid value for DEBUG: $DEBUG"
+                exit 1
+                ;;
+        esac
+    fi
 fi
 
 # Creating temp job file

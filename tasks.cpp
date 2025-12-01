@@ -468,6 +468,21 @@ uint32_t MATMULT(int m, int n, int p, uint32_t seed)
   }
 
   // Actual matrix multiplication begins here
+#ifdef USE_SIMD
+  // SIMD-optimized matrix multiplication (ikj loop order for better cache locality)
+  for (int i = 0; i < m; i++)
+  {
+    for (int k = 0; k < n; k++)
+    {
+      int a_ik = A[{i, k}];
+#pragma omp simd
+      for (int j = 0; j < p; j++)
+      {
+        C[{i, j}] += a_ik * B[{k, j}];
+      }
+    }
+  }
+#else
   for (int i = 0; i < m; i++)
   {
     for (int k = 0; k < n; k++)
@@ -478,6 +493,7 @@ uint32_t MATMULT(int m, int n, int p, uint32_t seed)
       }
     }
   }
+#endif
 
   int row = (seed = get_next(seed)) % m;
   int col = (seed = get_next(seed)) % p;
@@ -580,6 +596,9 @@ void bitonic_merge(vec<uint32_t> &a, int low, int cnt, int dir)
   if (cnt > 1)
   {
     int k = cnt / 2;
+#ifdef USE_SIMD
+#pragma omp simd
+#endif
     for (int i = low; i < low + k; i++)
     {
       bitonic_compare_swap(a, i, i + k, dir);

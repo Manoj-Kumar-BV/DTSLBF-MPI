@@ -1,8 +1,13 @@
 logs/*.slurmlog
+logs/benchmark/*.log
 distr-sched
+distr-sched-openmp
+distr-sched-simd
 distr-sched-seq
 distr-sched-debug1
 distr-sched-debug2
 runner_solution.cpp
 compile_commands.json
 *.o
+*.out
+.vscode/

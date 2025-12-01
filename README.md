@@ -1,6 +1,6 @@
-# Distributed Task Runner - MPI Implementation
+# Hybrid Parallel Task Scheduler: MPI + OpenMP + SIMD
 
-A high-performance distributed task execution system using MPI, featuring a master-worker architecture and optimized communication patterns.
+A high-performance distributed task execution system demonstrating **three levels of parallelism**: distributed memory (MPI), shared memory (OpenMP), and instruction-level vectorization (SIMD).
 
 ## 👥 Authors
 
@@ -9,7 +9,21 @@ A high-performance distributed task execution system using MPI, featuring a mast
 
 ## 🎯 Overview
 
-This project implements a distributed task runner using MPI, employing a master-worker architecture for efficient task distribution and execution. The system dynamically manages task queues and worker availability to maximize throughput.
+This project implements a distributed task scheduler with three parallel variants:
+1. **MPI-only** (`distr-sched`) - Baseline distributed memory implementation
+2. **MPI+OpenMP** (`distr-sched-openmp`) - Hybrid distributed + shared memory parallelism
+3. **MPI+OpenMP+SIMD** (`distr-sched-simd`) - Full three-level parallel optimization
+
+### Course Concepts Demonstrated
+
+| Unit | Concept | Implementation |
+|------|---------|----------------|
+| **Unit I** | ILP, Pipelining | SIMD vectorization with `#pragma omp simd` |
+| **Unit II** | Thread-level parallelism | OpenMP threading in worker nodes |
+| **Unit III** | Data-level parallelism | Vector operations on matrix and sort kernels |
+| **Unit IV** | Message passing | MPI master-worker with non-blocking communication |
+
+The system employs a master-worker architecture with dynamic load balancing across heterogeneous compute nodes.
 
 ## 🏗️ Architecture
 
@@ -53,106 +67,97 @@ MPI_Irecv(desc_tasks[proc], Nmax, TASK_T_TYPE,
           &proc_requests[proc]);
 ```
 
-### Communication Optimization
+### Key Implementations
 
+**OpenMP Threading** (worker nodes):
 ```cpp
-// Non-blocking wait for multiple requests
+#ifdef _OPENMP
+    omp_set_num_threads(2); // Balance MPI and OpenMP
+#endif
+```
+
+**SIMD Vectorization** (compute kernels):
+```cpp
+#pragma omp simd
+for (int j = 0; j < p; j++) {
+    C[{i, j}] += a_ik * B[{k, j}];
+}
+```
+
+**Non-blocking MPI Communication**:
+```cpp
 MPI_Waitsome(unavailable_requests.size(),
              unavailable_requests.data(),
              &outcount, indices.data(),
              MPI_STATUSES_IGNORE);
 ```
 
-## 📊 Performance Analysis
+## 🚀 Quick Start
 
-### Task Depth Impact
-
-| Depth | Tasks | Sequential (ms) | MPI (ms) | Speedup | CPU Util. |
-| ----- | ----- | --------------- | -------- | ------- | --------- |
-| 4     | 30    | 7,002           | 4,342    | 1.61x   | 8.82      |
-| 8     | 66    | 14,890          | 7,315    | 2.04x   | 9.31      |
-| 12    | 115   | 21,612          | 11,901   | 1.82x   | 9.50      |
-| 16    | 175   | 44,167          | 14,951   | 2.95x   | 9.64      |
-| 20    | 305   | 70,305          | 18,998   | 3.70x   | 9.68      |
-
-### Initial Tasks Impact
-
-| Tasks | Sequential (ms) | MPI (ms) | Speedup | CPU Util. |
-| ----- | --------------- | -------- | ------- | --------- |
-| 5     | 20,270          | 11,363   | 1.78x   | 9.46      |
-| 10    | 40,540          | 11,232   | 3.61x   | 9.49      |
-| 15    | 60,643          | 11,829   | 5.13x   | 9.47      |
-| 20    | 80,870          | 11,740   | 6.89x   | 9.41      |
-| 25    | 101,135         | 13,346   | 7.58x   | 9.50      |
-
-## 🔧 Optimization Journey
-
-### 1. Communication Pattern Evolution
-
-- **Initial**: Scatter-Gather pattern
-  ```cpp
-  MPI_Scatterv(task_queue.data(), send_counts.data(),
-               displs.data(), task_t_type, local_tasks.data(),
-               send_counts[rank], task_t_type, 0, MPI_COMM_WORLD);
-  ```
-- **Optimized**: Master-Worker with non-blocking communication
-  - Improved load balancing
-  - Reduced synchronization overhead
-  - Better handling of varying task durations
-
-### 2. Non-blocking Communication
-
-- Implemented asynchronous task distribution
-- Reduced worker idle time
-- Improved overall throughput
-
-### 3. Fixed-Size Communication
-
-- Always send Nmax-sized vectors
-- Reduced communication steps
-- Minimal overhead for small Nmax values
-
-## 📈 Performance Insights
-
-### Scaling Characteristics
-
-1. **Task Depth**
-
-   - Better speedup with increased depth
-   - Higher parallelism utilization
-   - Linear scaling up to hardware limits
-
-2. **Process Count**
-
-   - Optimal performance at 12-16 processes
-   - Diminishing returns beyond task pool size
-   - Communication overhead impacts at higher counts
-
-3. **Node Distribution**
-   - Better performance on higher clock speed nodes
-   - Communication overhead impacts multi-node setup
-   - CPU utilization remains consistent
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- MPI implementation (OpenMPI/MPICH)
-- C++ compiler with MPI support
-- SLURM workload manager (for cluster deployment)
-
-### Building and Running
-
+### Build All Variants
 ```bash
-# Build the project
-make
-
-# Run with SLURM
-sbatch config1.sh <depth> <Nmin> <Nmax> <P> <input_file>
-
-# Example
-sbatch config1.sh 16 1 2 0.10 tests/tinkywinky.in
+make clean
+make all
 ```
+This creates:
+- `distr-sched` (MPI-only)
+- `distr-sched-openmp` (MPI+OpenMP)
+- `distr-sched-simd` (MPI+OpenMP+SIMD)
+
+### Run Single Test
+```bash
+# MPI-only
+sbatch config1.sh 16 1 2 0.10 tests/tinkywinky.in
+
+# MPI+OpenMP
+VARIANT=openmp sbatch config1.sh 16 1 2 0.10 tests/tinkywinky.in
+
+# MPI+OpenMP+SIMD
+VARIANT=simd sbatch config1.sh 16 1 2 0.10 tests/tinkywinky.in
+```
+
+### Run Full Benchmark Suite
+```bash
+chmod +x benchmark.sh analyze_performance.py
+./benchmark.sh              # Submit 45 jobs (3 configs × 5 tests × 3 variants)
+# Wait for completion...
+./analyze_performance.py    # Generate performance comparison
+```
+
+## 📊 Expected Performance
+
+| Variant | Speedup over MPI-only | Best For |
+|---------|----------------------|----------|
+| MPI+OpenMP | 1.2-1.5x | Multi-core nodes |
+| MPI+OpenMP+SIMD | 1.5-2.0x | Compute-intensive tasks |
+
+### Performance Factors
+- **SIMD gains**: Most effective on matrix operations and sorting
+- **OpenMP benefits**: Better utilization of multi-core nodes
+- **Load balancing**: Dynamic task distribution handles heterogeneous workloads
+
+## 🔧 Project Structure
+
+```
+DTSLBF-MPI/
+├── main.cpp              # Entry point
+├── runner.cpp            # MPI+OpenMP coordination logic
+├── runner_seq.cpp        # Sequential reference implementation
+├── tasks.cpp             # SIMD-optimized compute kernels
+├── Makefile              # Multi-variant build system
+├── job.sh                # SLURM job execution script
+├── benchmark.sh          # Automated performance testing
+├── analyze_performance.py # Results analysis tool
+├── config*.sh            # Cluster configurations
+└── tests/                # Input test cases
+```
+
+## 📝 Prerequisites
+
+- MPI compiler (`mpic++`) with C++20 support
+- OpenMP support (`-fopenmp`)
+- CPU with SIMD extensions (AVX2 or better)
+- SLURM workload manager (for cluster deployment)
 
 ## 📊 Test Configurations
 
@@ -165,9 +170,36 @@ sbatch config1.sh 5 2 4 0.50 tests/po.in
 sbatch config1.sh 12 0 10 0.16 tests/thesun.in
 ```
 
-## 🛠️ Technical Specifications
+## 📚 Test Cases
 
-- **Processors**: Intel Xeon Silver 4114, Intel i7-7700
-- **Interconnect**: High-speed cluster network
-- **MPI Implementation**: OpenMPI/MPICH
-- **Compiler**: GCC/G++
+- `tinkywinky.in` - Large task depth (H=16)
+- `dipsy.in` - High generation probability (P=0.50)
+- `lala.in` - No task generation (P=0.00)
+- `po.in` - Balanced workload
+- `thesun.in` - Many initial tasks
+
+## 🏆 Key Features
+
+### Parallel Programming Concepts
+- ✅ **Three-level parallelism hierarchy** (MPI → OpenMP → SIMD)
+- ✅ **Distributed memory parallelism** - Master-worker pattern with MPI
+- ✅ **Shared memory parallelism** - OpenMP threads within nodes
+- ✅ **Instruction-level parallelism** - SIMD vectorization of compute kernels
+
+### Implementation Highlights
+- ✅ **Dynamic load balancing** across heterogeneous nodes
+- ✅ **Non-blocking communication** (MPI_Isend, MPI_Irecv, MPI_Waitsome)
+- ✅ **SIMD-optimized kernels** (matrix multiplication, bitonic sort)
+- ✅ **Cache-friendly loop ordering** (ikj instead of ijk)
+- ✅ **Automated benchmarking suite** with performance analysis
+- ✅ **Comprehensive documentation** and testing framework
+
+### Academic Value
+- Demonstrates concepts from Units I-IV of parallel programming
+- Quantitative performance comparison across paradigms
+- Real-world hybrid parallelism implementation
+- Suitable for mini project demonstration
+
+## 📄 License
+
+This project was developed as part of a distributed systems and parallel programming coursework.

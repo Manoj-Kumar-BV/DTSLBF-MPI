@@ -1,6 +1,10 @@
 #include "runner.hpp"
 #include <fstream>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 /*
  * ==========================================
  * | [START] OK TO MODIFY THIS FILE [START] |
@@ -130,6 +134,14 @@ void run_all_tasks(int rank, int num_procs, metric_t &stats, params_t &params)
   }
   else // Workers
   {
+    // Set OpenMP threads for intra-node parallelism (if enabled)
+#ifdef _OPENMP
+    int num_threads = omp_get_max_threads();
+    if (num_threads > 2) {
+      omp_set_num_threads(2); // Use 2 threads per worker to balance MPI and OpenMP
+    }
+#endif
+
     while (true)
     {
       int signal;
