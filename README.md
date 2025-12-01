@@ -2,11 +2,6 @@
 
 A high-performance distributed task execution system demonstrating **three levels of parallelism**: distributed memory (MPI), shared memory (OpenMP), and instruction-level vectorization (SIMD).
 
-## 👥 Authors
-
-- Nguyen Quy Duc
-- Pham Ba Thang
-
 ## 🎯 Overview
 
 This project implements a distributed task scheduler with three parallel variants:
