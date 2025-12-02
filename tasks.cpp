@@ -629,7 +629,7 @@ void bitonic_sort(vec<uint32_t> &a, int low, int cnt, int dir)
  *
  * Computes the SHA-256 message digest of the string str
  */
-std::array<char, 64> SHA(int len, uint32_t seed)
+std::array<char, 65> SHA(int len, uint32_t seed)
 {
   vec<BYTE> data(len);
 
@@ -641,7 +641,7 @@ std::array<char, 64> SHA(int len, uint32_t seed)
 
   SHA256_CTX payload;
   std::array<BYTE, 32> hash;
-  std::array<char, 64> result;
+  std::array<char, 65> result; // 64 chars + null terminator
 
   sha256_init(payload);
   sha256_update(payload, data, len);
@@ -651,6 +651,7 @@ std::array<char, 64> SHA(int len, uint32_t seed)
   {
     sprintf(result.data() + 2 * i, "%02x", hash[i]);
   }
+  result[64] = '\0'; // Null terminate
 
   return result;
 }

@@ -103,7 +103,7 @@ void run_all_tasks(int rank, int num_procs, metric_t &stats, params_t &params)
       else
       { // continue
         vector<MPI_Request> send_requests(worker_procs.size(), MPI_REQUEST_NULL);
-        for (int i = 0; i < worker_procs.size(); ++i)
+        for (size_t i = 0; i < worker_procs.size(); ++i)
         {
           int proc = worker_procs[i];
           int worker_rank = proc + 1;
@@ -114,7 +114,7 @@ void run_all_tasks(int rank, int num_procs, metric_t &stats, params_t &params)
 
       // send 1 task to each available process
       vector<MPI_Request> send_requests(worker_procs.size(), MPI_REQUEST_NULL);
-      for (int i = 0; i < worker_procs.size(); ++i)
+      for (size_t i = 0; i < worker_procs.size(); ++i)
       {
         if (task_queue.empty())
         {

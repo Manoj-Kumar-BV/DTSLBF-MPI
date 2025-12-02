@@ -48,14 +48,21 @@ def parse_benchmark_logs(log_dir):
     for log_file in log_path.glob('*.log'):
         filename = log_file.name
         
-        # Parse filename: ConfigName_TestName_Variant_JobID.log
+        # Parse filename: local_variant_testname.log or ConfigName_TestName_Variant_JobID.log
         parts = filename.replace('.log', '').split('_')
         if len(parts) < 3:
             continue
         
-        config = parts[0]
-        test = parts[1]
-        variant = parts[2]
+        # Handle local benchmark format: local_variant_testname.log
+        if parts[0] == 'local':
+            config = 'Local'
+            variant = parts[1]
+            test = parts[2]
+        else:
+            # Handle SLURM format: ConfigName_TestName_Variant_JobID.log
+            config = parts[0]
+            test = parts[1]
+            variant = parts[2]
         
         runtime = extract_runtime(log_file)
         utilization = extract_utilization(log_file)

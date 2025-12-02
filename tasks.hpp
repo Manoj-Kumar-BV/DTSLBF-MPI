@@ -207,7 +207,7 @@ uint32_t PRIME(uint32_t num);
 uint32_t MATMULT(int m, int n, int p, uint32_t seed);
 uint32_t LCS(int alph, int len1, int len2, uint32_t seed);
 uint32_t BITONIC(int n, uint32_t seed);
-std::array<char, 64> SHA(int len, uint32_t seed);
+std::array<char, 65> SHA(int len, uint32_t seed);
 
 // Sub-routines for bitonic sort
 void bitonic_compare_swap(vec<uint32_t> &a, int i, int j, int dir);
