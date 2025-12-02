@@ -1,13 +1,23 @@
-logs/*.slurmlog
-logs/benchmark/*.log
+# Compiled binaries
 distr-sched
 distr-sched-openmp
 distr-sched-simd
 distr-sched-seq
 distr-sched-debug1
 distr-sched-debug2
-runner_solution.cpp
-compile_commands.json
+
+# Object files
 *.o
 *.out
+
+# Logs
+logs/*.slurmlog
+logs/benchmark/*.log
+logs/visualization/*.log
+
+# IDE and build artifacts
 .vscode/
+compile_commands.json
+
+# Solution files (should not be committed)
+runner_solution.cpp

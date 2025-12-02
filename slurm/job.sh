@@ -1,6 +1,9 @@
 #!/bin/bash
 ## Common code executed by the Slurm file for each configuration
 
+# Change to project root
+cd "$(dirname "$0")/.."
+
 # Stop the script if any part fails
 set -e
 
@@ -81,7 +84,7 @@ set +x
 EVALUATE=${EVALUATE:-1}
 if [ "$EVALUATE" -eq 1 ]; then
     echo "Evaluating your results...";
-    ./check.py $@ < $TMP_JOB_FILE;
+    python3 src/check.py $@ < $TMP_JOB_FILE;
 fi
 
 # Remove the tmp file if it exists

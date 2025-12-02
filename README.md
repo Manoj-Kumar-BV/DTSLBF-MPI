@@ -91,32 +91,44 @@ MPI_Waitsome(unavailable_requests.size(),
 
 ### Build All Variants
 ```bash
-make clean
-make all
-```
-This creates:
-- `distr-sched` (MPI-only)
-- `distr-sched-openmp` (MPI+OpenMP)
-- `distr-sched-simd` (MPI+OpenMP+SIMD)
-
-### Run Single Test
-```bash
-# MPI-only
-sbatch config1.sh 16 1 2 0.10 tests/tinkywinky.in
-
-# MPI+OpenMP
-VARIANT=openmp sbatch config1.sh 16 1 2 0.10 tests/tinkywinky.in
-
-# MPI+OpenMP+SIMD
-VARIANT=simd sbatch config1.sh 16 1 2 0.10 tests/tinkywinky.in
+make clean && make all
 ```
 
-### Run Full Benchmark Suite
+### For Local Execution (No SLURM)
+
+**Interactive Demo** (⭐ Best for presentations):
 ```bash
-chmod +x benchmark.sh analyze_performance.py
-./benchmark.sh              # Submit 45 jobs (3 configs × 5 tests × 3 variants)
-# Wait for completion...
-./analyze_performance.py    # Generate performance comparison
+./scripts/demo_presentation.sh
+```
+
+**With Visualization**:
+```bash
+./scripts/demo_visualization.sh
+```
+
+**Single Test**:
+```bash
+./scripts/run_local.sh lala 4
+```
+
+**Full Benchmark**:
+```bash
+./scripts/run_benchmark_local.sh
+python3 scripts/analyze_performance.py
+```
+
+### For SLURM Clusters
+
+```bash
+# Single test
+sbatch slurm/config1.sh 16 1 2 0.10 tests/tinkywinky.in
+
+# With OpenMP
+VARIANT=openmp sbatch slurm/config1.sh 16 1 2 0.10 tests/tinkywinky.in
+
+# Full benchmark suite
+./slurm/benchmark.sh
+python3 scripts/analyze_performance.py
 ```
 
 ## 📊 Expected Performance
@@ -135,16 +147,37 @@ chmod +x benchmark.sh analyze_performance.py
 
 ```
 DTSLBF-MPI/
-├── main.cpp              # Entry point
-├── runner.cpp            # MPI+OpenMP coordination logic
-├── runner_seq.cpp        # Sequential reference implementation
-├── tasks.cpp             # SIMD-optimized compute kernels
-├── Makefile              # Multi-variant build system
-├── job.sh                # SLURM job execution script
-├── benchmark.sh          # Automated performance testing
-├── analyze_performance.py # Results analysis tool
-├── config*.sh            # Cluster configurations
-└── tests/                # Input test cases
+├── src/                  # Source code
+│   ├── main.cpp          # Entry point
+│   ├── runner.cpp        # MPI+OpenMP coordination logic
+│   ├── runner_seq.cpp    # Sequential reference
+│   ├── tasks.cpp         # SIMD-optimized compute kernels
+│   ├── runner.hpp        # Header files
+│   ├── tasks.hpp
+│   └── check.py          # Output validation
+├── scripts/              # Execution scripts
+│   ├── demo_presentation.sh       # Interactive demo
+│   ├── demo_visualization.sh      # Visualization demo
+│   ├── run_local.sh              # Single test runner
+│   ├── run_benchmark_local.sh    # Full benchmark suite
+│   ├── visualize_performance.py  # Performance charts
+│   ├── visualize_tasks.py        # Task distribution viz
+│   └── analyze_performance.py    # Results analysis
+├── slurm/                # SLURM cluster scripts
+│   ├── config*.sh        # Cluster configurations
+│   ├── job.sh            # Job execution script
+│   ├── benchmark.sh      # Automated testing
+│   └── example.sh        # Usage examples
+├── docs/                 # Documentation
+│   ├── PROJECT_EXPLANATION.md    # Complete guide
+│   ├── PRESENTATION_GUIDE.md     # Jury presentation
+│   ├── VISUALIZATION_GUIDE.md    # Visualization usage
+│   ├── RUNNING_LOCALLY.md        # Local execution
+│   └── QUICK_REFERENCE.txt       # Cheat sheet
+├── tests/                # Test input files
+├── logs/                 # Output logs
+├── Makefile              # Build system
+└── README.md             # This file
 ```
 
 ## 📝 Prerequisites

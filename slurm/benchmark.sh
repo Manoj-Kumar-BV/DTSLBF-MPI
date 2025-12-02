@@ -4,6 +4,9 @@
 
 set -e
 
+# Change to project root
+cd "$(dirname "$0")/.."
+
 echo "=========================================="
 echo "Performance Benchmarking Suite"
 echo "=========================================="
@@ -17,7 +20,7 @@ make all
 mkdir -p logs/benchmark
 
 # Test configurations
-CONFIGS=("config1.sh" "config2.sh" "config3.sh")
+CONFIGS=("slurm/config1.sh" "slurm/config2.sh" "slurm/config3.sh")
 CONFIG_NAMES=("Config1-Heterogeneous" "Config2-Homogeneous-XS" "Config3-Homogeneous-i7")
 
 # Test cases
